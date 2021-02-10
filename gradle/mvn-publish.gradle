@@ -1,0 +1,88 @@
+apply plugin: 'maven-publish'
+apply plugin: 'signing'
+
+repositories {
+    mavenCentral()
+}
+
+def getRepositoryUrl() {
+    return isReleaseBuild()
+            ? "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+            : "https://oss.sonatype.org/content/repositories/snapshots/"
+}
+
+def isReleaseBuild() {
+    return VERSION_NAME.contains("SNAPSHOT") == false
+}
+
+def getRepositoryUsername() {
+    return hasProperty('SONATYPE_NEXUS_USERNAME') ? SONATYPE_NEXUS_USERNAME : ""
+}
+
+def getRepositoryPassword() {
+    return hasProperty('SONATYPE_NEXUS_PASSWORD') ? SONATYPE_NEXUS_PASSWORD : ""
+}
+
+task sourcesJar(type: Jar) {
+    from sourceSets.main.allSource
+    archiveClassifier = 'sources'
+}
+
+task javadocJar(type: Jar) {
+    from javadoc
+    archiveClassifier = 'javadoc'
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            groupId = GROUP
+            artifactId = POM_ARTIFACT_ID
+            version = VERSION_NAME
+
+            from components.java
+            artifact sourcesJar
+            artifact javadocJar
+
+            pom {
+                name = POM_NAME
+                description = POM_DESCRIPTION
+                url = POM_URL
+
+                licenses {
+                    license {
+                        name = POM_LICENCE_NAME
+                        url = POM_LICENCE_URL
+                    }
+                }
+                developers {
+                    developer {
+                        id = POM_DEVELOPER_ID
+                        name = POM_DEVELOPER_NAME
+                    }
+                }
+                scm {
+                    url = POM_SCM_URL
+                    connection = POM_SCM_CONNECTION
+                    developerConnection = POM_SCM_DEV_CONNECTION
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            url = "${getRepositoryUrl()}"
+
+            credentials {
+                username = "${getRepositoryUsername()}"
+                password = "${getRepositoryPassword()}"
+            }
+        }
+    }
+}
+
+signing {
+    required { isReleaseBuild() && gradle.taskGraph.hasTask("publish") }
+    sign publishing.publications.mavenJava
+}
