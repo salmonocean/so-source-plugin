@@ -11,7 +11,7 @@ Available on <a href="https://search.maven.org/search?q=g:com.github.salmonocean
 ```gradle
 buildscript {
     dependencies {
-        classpath 'com.evergreen.android:so-source:0.0.1'
+        classpath 'com.github.salmonocean:so-source:0.0.1'
     }
 }
 ```
